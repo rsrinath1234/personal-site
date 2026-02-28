@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dino Chase v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Urbanist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8f9fc;
+    --dot-color: #bec8d8;
+    --ink: #141210;
+    --ink-secondary: #3d3a36;
+    --ink-muted: #7a8494;
+    --ink-subtle: #a8b4c4;
+    --accent: #4278b8;
+    --border: #c8d8ee;
+    --card-bg: #ffffff;
+    --nav-bg: rgba(248,249,252,0.9);
+    --footer-bg: rgba(248,249,252,0.6);
+    --dino1-color: rgba(255,255,255,0.95);
+    --dino2-color: rgba(255,255,255,0.72);
+    --dino-glow: rgba(66,120,184,0.3);
+    --shadow: 0 2px 8px rgba(30,50,90,0.08);
+  }
+
+  [data-theme="dark"] {
+    --bg: #0f1218;
+    --dot-color: #2a3545;
+    --ink: #f0f4f8;
+    --ink-secondary: #c8d4e0;
+    --ink-muted: #7a90a8;
+    --ink-subtle: #4a6080;
+    --accent: #6aa0e0;
+    --border: #1e3050;
+    --card-bg: #141c28;
+    --nav-bg: rgba(12,16,24,0.92);
+    --footer-bg: rgba(12,16,24,0.7);
+    --dino1-color: rgba(255,255,255,0.95);
+    --dino2-color: rgba(180,210,255,0.7);
+    --dino-glow: rgba(100,180,255,0.5);
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Urbanist', sans-serif;
+    background-color: var(--bg);
+    background-image: radial-gradient(circle, var(--dot-color) 0.75px, transparent 0.75px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  nav {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    background: var(--nav-bg);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 500; color: var(--ink); }
+  .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+  .nav-links a { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-muted); text-decoration: none; transition: color 0.15s; }
+  .nav-links a:hover { color: var(--ink); }
+
+  /* Theme toggle */
+  .theme-toggle {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+    font-family: 'Urbanist', sans-serif;
+    font-weight: 500;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .theme-toggle .icon { font-size: 0.9rem; transition: transform 0.4s ease; }
+  [data-theme="dark"] .theme-toggle .icon { transform: rotate(180deg); }
+
+  .page {
+    display: grid;
+    grid-template-columns: 90px 1fr 90px;
+    min-height: calc(100vh - 60px);
+  }
+
+  .lane { position: relative; border-color: var(--border); }
+  .lane-left { border-right: 1px solid rgba(200,216,238,0.25); }
+  .lane-right { border-left: 1px solid rgba(200,216,238,0.25); }
+
+  .main { padding: 4rem 2.5rem 5rem; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+    transition: color 0.4s;
+  }
+  .eyebrow::before { content: ''; display: inline-block; width: 18px; height: 1px; background: var(--accent); }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.25rem, 4vw, 3.5rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+    transition: color 0.4s;
+  }
+  h1 em { font-style: italic; color: var(--ink-secondary); }
+
+  .bio { font-size: 1rem; color: var(--ink-secondary); line-height: 1.8; max-width: 500px; margin-bottom: 3rem; transition: color 0.4s; }
+
+  .section-label {
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 1rem; transition: color 0.4s;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+
+  .card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 1.4rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s, background 0.4s, border-color 0.4s;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(30,50,90,0.14);
+    border-color: var(--accent);
+  }
+  [data-theme="dark"] .card:hover { box-shadow: 0 6px 24px rgba(100,160,255,0.15); }
+
+  .card-tag { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+  .card h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--ink); margin-bottom: 0.4rem; line-height: 1.3; }
+  .card p { font-size: 0.8rem; color: var(--ink-muted); line-height: 1.6; margin-bottom: 0.75rem; }
+  .card-date { font-size: 0.7rem; color: var(--ink-subtle); }
+
+  footer {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--ink-subtle);
+    background: var(--footer-bg);
+    transition: all 0.4s;
+  }
+
+  #dinoCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* Roar bubble */
+  .roar-bubble {
+    position: fixed;
+    background: var(--card-bg);
+    border: 1.5px solid var(--accent);
+    border-radius: 12px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    pointer-events: none;
+    z-index: 20;
+    opacity: 0;
+    transform: scale(0.8) translateY(0);
+    transition: opacity 0.15s, transform 0.15s;
+    white-space: nowrap;
+    box-shadow: var(--shadow);
+  }
+  .roar-bubble.show {
+    opacity: 1;
+    transform: scale(1) translateY(-8px);
+  }
+  .roar-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--accent);
+  }
+
+  .hint {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-subtle);
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">Raghav Srinath</span>
+  <ul class="nav-links">
+    <li><a href="#">Writing</a></li>
+    <li><a href="#">Projects</a></li>
+    <li><a href="#">Work With Me</a></li>
+    <li>
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span class="icon">☀️</span>
+        <span class="label">Light</span>
+      </button>
+    </li>
+  </ul>
+</nav>
+
+<div class="page" id="page">
+  <div class="lane lane-left"></div>
+  <main class="main">
+    <div class="eyebrow">Raghav Srinath</div>
+    <h1>Operator. Builder.<br><em>Perpetually curious.</em></h1>
+    <p class="bio">I lead operations at Handshake, currently scaling our Bangalore office from 20 to 80 people. I write about building teams, navigating identity as an Indian-American, and what it feels like to do hard things for the first time.</p>
+    <p class="section-label">Recent Writing</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-tag">Essay</div>
+        <h3>Two Weeks in Bangalore</h3>
+        <p>On arriving in a country that's supposed to feel like home.</p>
+        <span class="card-date">2026-02-23</span>
+      </div>
+      <div class="card">
+        <div class="card-tag">🔒 Private</div>
+        <h3>Team Notes: Week Two</h3>
+        <p>Raw observations on the team and what I want to fix.</p>
+        <span class="card-date">2026-02-20</span>
+      </div>
+      <div class="card">
+        <div class="card-tag">Essay</div>
+        <h3>More coming soon</h3>
+        <p>Keep writing, keep shipping.</p>
+        <span class="card-date">—</span>
+      </div>
+    </div>
+  </main>
+  <div class="lane lane-right"></div>
+</div>
+
+<footer>© 2026 Raghav Srinath · Built with care</footer>
+
+<canvas id="dinoCanvas" onclick="handleCanvasClick(event)"></canvas>
+<div class="roar-bubble" id="roarBubble">RAAWR!! 🦕</div>
+<div class="hint">Click a dino · Scroll to speed up</div>
+
+<script>
+const canvas = document.getElementById('dinoCanvas');
+const ctx = canvas.getContext('2d');
+const roarBubble = document.getElementById('roarBubble');
+
+let W, H, PATH;
+let scrollSpeed = 0;
+let isDark = false;
+let roarTimeout = null;
+
+const ROARS = ['RAAWR!! 🦕', 'STOMP! 🦖', 'ZOOM! 💨', 'YIKES! 😱', 'NEVER! 🏃', "CAN'T CATCH ME!", 'WHEEE!! 🌀'];
+
+// ── Theme ──
+function toggleTheme() {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  const btn = document.querySelector('.theme-toggle');
+  btn.querySelector('.icon').textContent = isDark ? '🌙' : '☀️';
+  btn.querySelector('.label').textContent = isDark ? 'Dark' : 'Light';
+}
+
+// ── Resize ──
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  buildPath();
+}
+
+function buildPath() {
+  const navH = 60;
+  const mx = 45;
+  PATH = [
+    { x: mx, y: navH + 30 },
+    { x: mx, y: H - 30 },
+    { x: W - mx, y: H - 30 },
+    { x: W - mx, y: navH + 30 },
+  ];
+}
+
+function getPathLength() {
+  let len = 0;
+  for (let i = 0; i < PATH.length; i++) {
+    const a = PATH[i], b = PATH[(i+1) % PATH.length];
+    len += Math.hypot(b.x - a.x, b.y - a.y);
+  }
+  return len;
+}
+
+function getPosOnPath(t) {
+  const total = getPathLength();
+  let target = ((t % 1) + 1) % 1 * total;
+  for (let i = 0; i < PATH.length; i++) {
+    const a = PATH[i], b = PATH[(i+1) % PATH.length];
+    const seg = Math.hypot(b.x - a.x, b.y - a.y);
+    if (target <= seg) {
+      const f = target / seg;
+      return { x: a.x + (b.x-a.x)*f, y: a.y + (b.y-a.y)*f, angle: Math.atan2(b.y-a.y, b.x-a.x), seg: i };
+    }
+    target -= seg;
+  }
+  return { x: PATH[0].x, y: PATH[0].y, angle: 0, seg: 0 };
+}
+
+// ── Obstacles ──
+const OBS_POSITIONS = [0.07, 0.16, 0.29, 0.41, 0.53, 0.64, 0.77, 0.9];
+const obstacles = OBS_POSITIONS.map(t => ({
+  t,
+  w: 13 + Math.random() * 7,
+  h: 11 + Math.random() * 9,
+}));
+
+// ── Dinos ──
+const GAP = 0.16;
+const dino1 = { t: 0,    speed: 0.000135, jumpV: 0, jumpY: 0, isJumping: false, legPhase: 0, roaring: false, lookBack: 0 };
+const dino2 = { t: -GAP, speed: 0.000142, jumpV: 0, jumpY: 0, isJumping: false, legPhase: Math.PI, roaring: false, lookBack: 0 };
+
+function tryJump(dino) {
+  if (!dino.isJumping) { dino.isJumping = true; dino.jumpV = -8.5; }
+}
+
+function checkJumps(dino) {
+  const LOOK = 0.022;
+  for (const obs of obstacles) {
+    const diff = ((obs.t - dino.t) % 1 + 1) % 1;
+    if (diff < LOOK && diff > 0.001) tryJump(dino);
+  }
+}
+
+// ── Footprints ──
+const footprints = [];
+let footprintTimer1 = 0, footprintTimer2 = 0;
+
+function addFootprint(x, y, angle) {
+  footprints.push({ x, y, angle, life: 1.0 });
+}
+
+function updateFootprints(dt) {
+  for (let i = footprints.length - 1; i >= 0; i--) {
+    footprints[i].life -= 0.008 * (dt / 16);
+    if (footprints[i].life <= 0) footprints.splice(i, 1);
+  }
+}
+
+function drawFootprints() {
+  for (const fp of footprints) {
+    ctx.save();
+    ctx.translate(fp.x, fp.y);
+    ctx.rotate(fp.angle + Math.PI / 2);
+    const alpha = fp.life * (isDark ? 0.5 : 0.35);
+    ctx.fillStyle = isDark ? `rgba(100,170,255,${alpha})` : `rgba(66,120,184,${alpha})`;
+    // Two small oval footprints side by side
+    ctx.beginPath();
+    ctx.ellipse(-3, 0, 2, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(3, 0, 2, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ── Dust ──
+const dust = [];
+function spawnDust(x, y) {
+  for (let i = 0; i < 6; i++) {
+    dust.push({ x, y, vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4, life: 1, r: 2+Math.random()*3 });
+  }
+}
+function updateDust(dt) {
+  for (let i = dust.length-1; i >= 0; i--) {
+    dust[i].x += dust[i].vx; dust[i].y += dust[i].vy;
+    dust[i].life -= 0.05 * (dt/16);
+    if (dust[i].life <= 0) dust.splice(i, 1);
+  }
+}
+function drawDust() {
+  for (const p of dust) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = isDark ? `rgba(100,170,255,${p.life*0.4})` : `rgba(190,200,216,${p.life*0.6})`;
+    ctx.fill();
+  }
+}
+
+// ── Draw dino ──
+function drawDino(x, y, jumpY, angle, legPhase, col, glowCol, lookBack, roaring) {
+  const S = 22;
+  const s = S / 20;
+
+  ctx.save();
+  ctx.translate(x, y + jumpY);
+
+  // Glow in dark mode
+  if (isDark) {
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = glowCol;
+  }
+
+  // If looking back, flip horizontally
+  const scaleX = lookBack > 0 ? -1 : 1;
+  ctx.rotate(angle + Math.PI / 2);
+  ctx.scale(scaleX, 1);
+
+  ctx.fillStyle = col;
+  ctx.strokeStyle = isDark ? 'rgba(100,170,255,0.4)' : 'rgba(66,120,184,0.35)';
+  ctx.lineWidth = 0.8;
+
+  // Body
+  ctx.beginPath();
+  ctx.roundRect(-7*s, -10*s, 14*s, 12*s, 3*s);
+  ctx.fill(); ctx.stroke();
+
+  // Head
+  ctx.beginPath();
+  ctx.roundRect(2*s, -18*s, 10*s, 10*s, 2*s);
+  ctx.fill(); ctx.stroke();
+
+  // Eye — wider when roaring
+  ctx.fillStyle = isDark ? '#6aa0e0' : '#4278b8';
+  ctx.beginPath();
+  const eyeR = roaring ? 2.8*s : 1.8*s;
+  ctx.arc(9*s, -14*s, eyeR, 0, Math.PI*2);
+  ctx.fill();
+
+  // Mouth — open when roaring
+  if (roaring) {
+    ctx.strokeStyle = isDark ? '#6aa0e0' : '#4278b8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(11*s, -10*s, 3*s, 0, Math.PI);
+    ctx.stroke();
+  }
+
+  // Snout
+  ctx.fillStyle = col;
+  ctx.strokeStyle = isDark ? 'rgba(100,170,255,0.35)' : 'rgba(66,120,184,0.35)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.roundRect(10*s, -12*s, 5*s, 4*s, 1*s);
+  ctx.fill(); ctx.stroke();
+
+  // Arm
+  ctx.beginPath();
+  ctx.roundRect(5*s, -4*s, 5*s, 3*s, 1*s);
+  ctx.fill();
+
+  // Legs
+  const legOff = Math.sin(legPhase) * 4 * s;
+  ctx.beginPath();
+  ctx.roundRect(-5*s, 2*s, 4*s, 8*s + legOff, 1.5*s);
+  ctx.fill(); ctx.stroke();
+  ctx.beginPath();
+  ctx.roundRect(1*s, 2*s, 4*s, 8*s - legOff, 1.5*s);
+  ctx.fill(); ctx.stroke();
+
+  // Tail
+  ctx.beginPath();
+  ctx.moveTo(-7*s, -6*s);
+  ctx.quadraticCurveTo(-18*s, -2*s, -14*s, 6*s);
+  ctx.lineWidth = 3*s;
+  ctx.strokeStyle = col;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ── Draw obstacle ──
+function drawObstacle(obs) {
+  const pos = getPosOnPath(obs.t);
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
+  ctx.rotate(pos.angle + Math.PI/2);
+  ctx.fillStyle = isDark ? 'rgba(100,160,255,0.35)' : 'rgba(66,120,184,0.45)';
+  ctx.strokeStyle = isDark ? 'rgba(100,160,255,0.7)' : 'rgba(66,120,184,0.7)';
+  ctx.lineWidth = 1;
+  if (isDark) { ctx.shadowBlur = 8; ctx.shadowColor = 'rgba(100,160,255,0.4)'; }
+  ctx.beginPath();
+  ctx.roundRect(-obs.w/2, -obs.h, obs.w, obs.h, 2);
+  ctx.fill(); ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = isDark ? 'rgba(180,220,255,0.25)' : 'rgba(255,255,255,0.4)';
+  ctx.beginPath();
+  ctx.roundRect(-obs.w/4, -obs.h*0.75, obs.w*0.3, obs.h*0.25, 1);
+  ctx.fill();
+  ctx.restore();
+}
+
+// ── Click to roar ──
+function handleCanvasClick(e) {
+  const mx = e.clientX, my = e.clientY;
+  const pos1 = getPosOnPath(dino1.t);
+  const pos2 = getPosOnPath(dino2.t);
+  const hit1 = Math.hypot(mx - pos1.x, my - pos1.y) < 28;
+  const hit2 = Math.hypot(mx - pos2.x, my - pos2.y) < 28;
+
+  if (hit1 || hit2) {
+    const pos = hit1 ? pos1 : pos2;
+    const dino = hit1 ? dino1 : dino2;
+
+    dino.roaring = true;
+    dino.lookBack = 1;
+
+    const roar = ROARS[Math.floor(Math.random() * ROARS.length)];
+    roarBubble.textContent = roar;
+    roarBubble.style.left = (pos.x - 60) + 'px';
+    roarBubble.style.top = (pos.y - 60) + 'px';
+    roarBubble.classList.add('show');
+
+    if (roarTimeout) clearTimeout(roarTimeout);
+    roarTimeout = setTimeout(() => {
+      roarBubble.classList.remove('show');
+      dino.roaring = false;
+      setTimeout(() => { dino.lookBack = 0; }, 400);
+    }, 1400);
+  }
+}
+
+// ── Corner tracking for dust ──
+let lastSeg1 = 0, lastSeg2 = 0;
+
+// ── Main loop ──
+let lastTime = 0;
+function loop(ts) {
+  const dt = Math.min(ts - lastTime, 32);
+  lastTime = ts;
+  const speedMult = 1 + scrollSpeed * 0.012;
+
+  // Move dinos
+  dino1.t += dino1.speed * dt * speedMult;
+  dino2.t += dino2.speed * dt * speedMult;
+  dino1.legPhase += 0.14 * speedMult;
+  dino2.legPhase += 0.14 * speedMult;
+
+  // Jump physics
+  [dino1, dino2].forEach(d => {
+    if (d.isJumping) {
+      d.jumpV += 0.65;
+      d.jumpY += d.jumpV;
+      if (d.jumpY >= 0) { d.jumpY = 0; d.jumpV = 0; d.isJumping = false; }
+    }
+  });
+
+  checkJumps(dino1);
+  checkJumps(dino2);
+
+  const pos1 = getPosOnPath(dino1.t);
+  const pos2 = getPosOnPath(dino2.t);
+
+  // Corner dust
+  if (pos1.seg !== lastSeg1) { spawnDust(pos1.x, pos1.y); lastSeg1 = pos1.seg; }
+  if (pos2.seg !== lastSeg2) { spawnDust(pos2.x, pos2.y); lastSeg2 = pos2.seg; }
+
+  // Footprints
+  footprintTimer1 += dt;
+  footprintTimer2 += dt;
+  if (footprintTimer1 > 280) { addFootprint(pos1.x, pos1.y, pos1.angle); footprintTimer1 = 0; }
+  if (footprintTimer2 > 280) { addFootprint(pos2.x, pos2.y, pos2.angle); footprintTimer2 = 0; }
+
+  updateFootprints(dt);
+  updateDust(dt);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Draw footprints first (underneath everything)
+  drawFootprints();
+
+  // Draw obstacles
+  for (const obs of obstacles) drawObstacle(obs);
+
+  // Draw dust
+  drawDust();
+
+  // Dino colors
+  const d1col = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.95)';
+  const d2col = isDark ? 'rgba(160,200,255,0.75)' : 'rgba(255,255,255,0.72)';
+  const glow1 = isDark ? 'rgba(120,190,255,0.7)' : 'rgba(66,120,184,0.3)';
+  const glow2 = isDark ? 'rgba(100,160,255,0.5)' : 'rgba(66,120,184,0.2)';
+
+  // Dino 2 behind
+  drawDino(pos2.x, pos2.y, dino2.jumpY, pos2.angle, dino2.legPhase, d2col, glow2, dino2.lookBack, dino2.roaring);
+  // Dino 1 ahead
+  drawDino(pos1.x, pos1.y, dino1.jumpY, pos1.angle, dino1.legPhase, d1col, glow1, dino1.lookBack, dino1.roaring);
+
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('scroll', () => { scrollSpeed = Math.min(window.scrollY / 8, 18); });
+resize();
+window.addEventListener('resize', resize);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
