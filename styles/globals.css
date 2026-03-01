@@ -3,6 +3,7 @@
 :root {
   --white: #ffffff;
   --bg: #f8f9fc;
+  --dot-color: #bec8d8;
   --ink: #141210;
   --ink-secondary: #3d3a36;
   --ink-muted: #7a8494;
@@ -16,6 +17,30 @@
   --shadow-md: 0 4px 16px rgba(66, 120, 184, 0.12);
   --shadow-lg: 0 12px 40px rgba(66, 120, 184, 0.15);
   --radius: 6px;
+  --nav-bg: rgba(248, 249, 252, 0.88);
+  --footer-bg: rgba(248, 249, 252, 0.6);
+  --card-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+  --white: #141c28;
+  --bg: #0f1218;
+  --dot-color: #2a3545;
+  --ink: #f0f4f8;
+  --ink-secondary: #c8d4e0;
+  --ink-muted: #7a90a8;
+  --ink-subtle: #4a6080;
+  --accent: #6aa0e0;
+  --accent-light: #8ab8f0;
+  --accent-bg: rgba(100, 160, 255, 0.12);
+  --border: #1e3050;
+  --border-strong: #2a4060;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --nav-bg: rgba(12, 16, 24, 0.92);
+  --footer-bg: rgba(12, 16, 24, 0.7);
+  --card-bg: #141c28;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,17 +50,19 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 body {
   background-color: var(--bg);
-  background-image: radial-gradient(circle, #bec8d8 0.75px, transparent 0.75px);
+  background-image: radial-gradient(circle, var(--dot-color) 0.75px, transparent 0.75px);
   background-size: 22px 22px;
   color: var(--ink);
   font-family: 'Urbanist', sans-serif;
   font-weight: 400;
   line-height: 1.6;
   min-height: 100vh;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 /* Typography */
@@ -64,10 +91,11 @@ nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(248,249,252,0.88);
+  background: var(--nav-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
+  transition: background 0.4s, border-color 0.4s;
 }
 
 .nav-inner {
@@ -101,6 +129,26 @@ nav {
 }
 .nav-links a:hover { color: var(--ink); }
 .nav-icon { margin-right: 0.35em; }
+
+/* Theme toggle */
+.theme-toggle {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+  font-family: 'Urbanist', sans-serif;
+  font-weight: 500;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.theme-toggle .icon { font-size: 0.9rem; transition: transform 0.4s ease; }
+[data-theme="dark"] .theme-toggle .icon { transform: rotate(180deg); }
 
 /* Page */
 .page { padding: 4rem 0 7rem; }
@@ -164,17 +212,17 @@ nav {
 }
 
 .card {
-  background: #ffffff;
-  border: 1.5px solid #c8d8ee;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius);
   padding: 1.75rem;
-  box-shadow: 0 2px 12px rgba(66, 120, 184, 0.12);
+  box-shadow: var(--shadow-md);
   transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   display: block;
   color: inherit;
 }
 .card:hover {
-  box-shadow: 0 4px 20px rgba(66, 120, 184, 0.18);
+  box-shadow: var(--shadow-lg);
   border-color: var(--border-strong);
   transform: translateY(-2px);
   color: inherit;
@@ -268,14 +316,14 @@ nav {
 .gate { min-height: 65vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
 
 .gate-box {
-  background: #ffffff;
-  border: 1.5px solid #c8d8ee;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius);
   padding: 3rem;
   max-width: 400px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 2px 12px rgba(66, 120, 184, 0.12);
+  box-shadow: var(--shadow-md);
 }
 
 .gate-box .lock {
@@ -343,7 +391,7 @@ nav {
   padding: 0.75rem 1rem;
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
-  background: #ffffff;
+  background: var(--card-bg);
   font-family: 'Urbanist', sans-serif;
   font-size: 0.95rem;
   color: var(--ink);
@@ -395,7 +443,7 @@ nav {
 }
 .dino-roar-bubble {
   position: fixed;
-  background: var(--white);
+  background: var(--card-bg);
   border: 1.5px solid var(--accent);
   border-radius: 12px;
   padding: 0.4rem 0.75rem;
@@ -443,7 +491,8 @@ footer {
   font-size: 0.75rem;
   color: var(--ink-subtle);
   letter-spacing: 0.02em;
-  background: rgba(248,249,252,0.6);
+  background: var(--footer-bg);
+  transition: background 0.4s, border-color 0.4s, color 0.4s;
 }
 
 /* Animations */

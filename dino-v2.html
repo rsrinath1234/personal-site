@@ -185,28 +185,25 @@
   }
 
   /* Roar bubble */
-  .roar-bubble {
+  .bubble {
     position: fixed;
     background: var(--card-bg);
     border: 1.5px solid var(--accent);
     border-radius: 12px;
-    padding: 0.4rem 0.75rem;
+    padding: 0.4rem 0.8rem;
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--accent);
     pointer-events: none;
     z-index: 20;
     opacity: 0;
-    transform: scale(0.8) translateY(0);
-    transition: opacity 0.15s, transform 0.15s;
+    transform: scale(0.8);
+    transition: opacity 0.15s, transform 0.2s;
     white-space: nowrap;
     box-shadow: var(--shadow);
   }
-  .roar-bubble.show {
-    opacity: 1;
-    transform: scale(1) translateY(-8px);
-  }
-  .roar-bubble::after {
+  .bubble.show { opacity: 1; transform: scale(1) translateY(-6px); }
+  .bubble::after {
     content: '';
     position: absolute;
     bottom: -7px;
@@ -215,6 +212,16 @@
     border: 6px solid transparent;
     border-top-color: var(--accent);
   }
+  .impact-flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(160,210,80,0.08);
+    pointer-events: none;
+    z-index: 6;
+    opacity: 0;
+    transition: opacity 0.08s;
+  }
+  .impact-flash.show { opacity: 1; }
 
   .hint {
     position: fixed;
@@ -239,8 +246,8 @@
     <li><a href="#">Work With Me</a></li>
     <li>
       <button class="theme-toggle" onclick="toggleTheme()">
-        <span class="icon">☀️</span>
-        <span class="label">Light</span>
+        <span class="icon" id="ti">☀️</span>
+        <span class="label" id="tl">Light</span>
       </button>
     </li>
   </ul>
@@ -279,14 +286,18 @@
 
 <footer>© 2026 Raghav Srinath · Built with care</footer>
 
-<canvas id="dinoCanvas" onclick="handleCanvasClick(event)"></canvas>
-<div class="roar-bubble" id="roarBubble">RAAWR!! 🦕</div>
+<canvas id="dinoCanvas" style="pointer-events:all;" onclick="handleClick(event)"></canvas>
+<div class="bubble" id="b1"></div>
+<div class="bubble" id="b2"></div>
+<div class="impact-flash" id="impactFlash"></div>
 <div class="hint">Click a dino · Scroll to speed up</div>
 
 <script>
 const canvas = document.getElementById('dinoCanvas');
 const ctx = canvas.getContext('2d');
-const roarBubble = document.getElementById('roarBubble');
+const b1 = document.getElementById('b1');
+const b2 = document.getElementById('b2');
+const impactFlash = document.getElementById('impactFlash');
 
 let W, H, PATH;
 let scrollSpeed = 0;
@@ -299,9 +310,10 @@ const ROARS = ['RAAWR!! 🦕', 'STOMP! 🦖', 'ZOOM! 💨', 'YIKES! 😱', 'NEVE
 function toggleTheme() {
   isDark = !isDark;
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  const btn = document.querySelector('.theme-toggle');
-  btn.querySelector('.icon').textContent = isDark ? '🌙' : '☀️';
-  btn.querySelector('.label').textContent = isDark ? 'Dark' : 'Light';
+  const ti = document.getElementById('ti');
+  const tl = document.getElementById('tl');
+  if (ti) ti.textContent = isDark ? '🌙' : '☀️';
+  if (tl) tl.textContent = isDark ? 'Dark' : 'Light';
 }
 
 // ── Resize ──
@@ -393,7 +405,6 @@ function drawFootprints() {
     ctx.rotate(fp.angle + Math.PI / 2);
     const alpha = fp.life * (isDark ? 0.5 : 0.35);
     ctx.fillStyle = isDark ? `rgba(100,170,255,${alpha})` : `rgba(66,120,184,${alpha})`;
-    // Two small oval footprints side by side
     ctx.beginPath();
     ctx.ellipse(-3, 0, 2, 3, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -435,13 +446,11 @@ function drawDino(x, y, jumpY, angle, legPhase, col, glowCol, lookBack, roaring)
   ctx.save();
   ctx.translate(x, y + jumpY);
 
-  // Glow in dark mode
   if (isDark) {
     ctx.shadowBlur = 18;
     ctx.shadowColor = glowCol;
   }
 
-  // If looking back, flip horizontally
   const scaleX = lookBack > 0 ? -1 : 1;
   ctx.rotate(angle + Math.PI / 2);
   ctx.scale(scaleX, 1);
@@ -450,24 +459,20 @@ function drawDino(x, y, jumpY, angle, legPhase, col, glowCol, lookBack, roaring)
   ctx.strokeStyle = isDark ? 'rgba(100,170,255,0.4)' : 'rgba(66,120,184,0.35)';
   ctx.lineWidth = 0.8;
 
-  // Body
   ctx.beginPath();
   ctx.roundRect(-7*s, -10*s, 14*s, 12*s, 3*s);
   ctx.fill(); ctx.stroke();
 
-  // Head
   ctx.beginPath();
   ctx.roundRect(2*s, -18*s, 10*s, 10*s, 2*s);
   ctx.fill(); ctx.stroke();
 
-  // Eye — wider when roaring
   ctx.fillStyle = isDark ? '#6aa0e0' : '#4278b8';
   ctx.beginPath();
   const eyeR = roaring ? 2.8*s : 1.8*s;
   ctx.arc(9*s, -14*s, eyeR, 0, Math.PI*2);
   ctx.fill();
 
-  // Mouth — open when roaring
   if (roaring) {
     ctx.strokeStyle = isDark ? '#6aa0e0' : '#4278b8';
     ctx.lineWidth = 1.5;
@@ -476,7 +481,6 @@ function drawDino(x, y, jumpY, angle, legPhase, col, glowCol, lookBack, roaring)
     ctx.stroke();
   }
 
-  // Snout
   ctx.fillStyle = col;
   ctx.strokeStyle = isDark ? 'rgba(100,170,255,0.35)' : 'rgba(66,120,184,0.35)';
   ctx.lineWidth = 0.8;
@@ -484,12 +488,10 @@ function drawDino(x, y, jumpY, angle, legPhase, col, glowCol, lookBack, roaring)
   ctx.roundRect(10*s, -12*s, 5*s, 4*s, 1*s);
   ctx.fill(); ctx.stroke();
 
-  // Arm
   ctx.beginPath();
   ctx.roundRect(5*s, -4*s, 5*s, 3*s, 1*s);
   ctx.fill();
 
-  // Legs
   const legOff = Math.sin(legPhase) * 4 * s;
   ctx.beginPath();
   ctx.roundRect(-5*s, 2*s, 4*s, 8*s + legOff, 1.5*s);
@@ -498,7 +500,6 @@ function drawDino(x, y, jumpY, angle, legPhase, col, glowCol, lookBack, roaring)
   ctx.roundRect(1*s, 2*s, 4*s, 8*s - legOff, 1.5*s);
   ctx.fill(); ctx.stroke();
 
-  // Tail
   ctx.beginPath();
   ctx.moveTo(-7*s, -6*s);
   ctx.quadraticCurveTo(-18*s, -2*s, -14*s, 6*s);
@@ -531,7 +532,7 @@ function drawObstacle(obs) {
 }
 
 // ── Click to roar ──
-function handleCanvasClick(e) {
+function handleClick(e) {
   const mx = e.clientX, my = e.clientY;
   const pos1 = getPosOnPath(dino1.t);
   const pos2 = getPosOnPath(dino2.t);
@@ -541,19 +542,23 @@ function handleCanvasClick(e) {
   if (hit1 || hit2) {
     const pos = hit1 ? pos1 : pos2;
     const dino = hit1 ? dino1 : dino2;
+    const bubble = hit1 ? b1 : b2;
 
     dino.roaring = true;
     dino.lookBack = 1;
 
     const roar = ROARS[Math.floor(Math.random() * ROARS.length)];
-    roarBubble.textContent = roar;
-    roarBubble.style.left = (pos.x - 60) + 'px';
-    roarBubble.style.top = (pos.y - 60) + 'px';
-    roarBubble.classList.add('show');
+    bubble.textContent = roar;
+    bubble.style.left = (pos.x - 60) + 'px';
+    bubble.style.top = (pos.y - 60) + 'px';
+    bubble.classList.add('show');
+
+    impactFlash.classList.add('show');
+    setTimeout(() => impactFlash.classList.remove('show'), 80);
 
     if (roarTimeout) clearTimeout(roarTimeout);
     roarTimeout = setTimeout(() => {
-      roarBubble.classList.remove('show');
+      bubble.classList.remove('show');
       dino.roaring = false;
       setTimeout(() => { dino.lookBack = 0; }, 400);
     }, 1400);
@@ -570,13 +575,11 @@ function loop(ts) {
   lastTime = ts;
   const speedMult = 1 + scrollSpeed * 0.012;
 
-  // Move dinos
   dino1.t += dino1.speed * dt * speedMult;
   dino2.t += dino2.speed * dt * speedMult;
   dino1.legPhase += 0.14 * speedMult;
   dino2.legPhase += 0.14 * speedMult;
 
-  // Jump physics
   [dino1, dino2].forEach(d => {
     if (d.isJumping) {
       d.jumpV += 0.65;
@@ -591,11 +594,9 @@ function loop(ts) {
   const pos1 = getPosOnPath(dino1.t);
   const pos2 = getPosOnPath(dino2.t);
 
-  // Corner dust
   if (pos1.seg !== lastSeg1) { spawnDust(pos1.x, pos1.y); lastSeg1 = pos1.seg; }
   if (pos2.seg !== lastSeg2) { spawnDust(pos2.x, pos2.y); lastSeg2 = pos2.seg; }
 
-  // Footprints
   footprintTimer1 += dt;
   footprintTimer2 += dt;
   if (footprintTimer1 > 280) { addFootprint(pos1.x, pos1.y, pos1.angle); footprintTimer1 = 0; }
@@ -606,24 +607,16 @@ function loop(ts) {
 
   ctx.clearRect(0, 0, W, H);
 
-  // Draw footprints first (underneath everything)
   drawFootprints();
-
-  // Draw obstacles
   for (const obs of obstacles) drawObstacle(obs);
-
-  // Draw dust
   drawDust();
 
-  // Dino colors
   const d1col = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.95)';
   const d2col = isDark ? 'rgba(160,200,255,0.75)' : 'rgba(255,255,255,0.72)';
   const glow1 = isDark ? 'rgba(120,190,255,0.7)' : 'rgba(66,120,184,0.3)';
   const glow2 = isDark ? 'rgba(100,160,255,0.5)' : 'rgba(66,120,184,0.2)';
 
-  // Dino 2 behind
   drawDino(pos2.x, pos2.y, dino2.jumpY, pos2.angle, dino2.legPhase, d2col, glow2, dino2.lookBack, dino2.roaring);
-  // Dino 1 ahead
   drawDino(pos1.x, pos1.y, dino1.jumpY, pos1.angle, dino1.legPhase, d1col, glow1, dino1.lookBack, dino1.roaring);
 
   requestAnimationFrame(loop);
