@@ -461,5 +461,7 @@ footer {
   .nav-links { gap: 1.25rem; }
   .card-grid, .project-grid { grid-template-columns: 1fr; }
   .hero { padding: 3.5rem 0 3rem; }
-  .container--wide { padding: 0 1.25rem; }
+  .container,
+  .container--wide { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .page { padding-left: 1.25rem; padding-right: 1.25rem; }
 }

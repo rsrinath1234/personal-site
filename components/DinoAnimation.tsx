@@ -57,12 +57,23 @@ export default function DinoAnimation() {
     function buildPath() {
       const navH = 60
       const mx = 45
-      PATH = [
-        { x: mx, y: navH + 30 },
-        { x: mx, y: H - 30 },
-        { x: W - mx, y: H - 30 },
-        { x: W - mx, y: navH + 30 },
-      ]
+      const isMobile = W < 768
+      if (isMobile) {
+        // Mobile: horizontal loop along bottom 60px only
+        const y = H - 30
+        PATH = [
+          { x: mx, y },
+          { x: W - mx, y },
+          { x: mx, y },
+        ]
+      } else {
+        PATH = [
+          { x: mx, y: navH + 30 },
+          { x: mx, y: H - 30 },
+          { x: W - mx, y: H - 30 },
+          { x: W - mx, y: navH + 30 },
+        ]
+      }
     }
 
     function getPosOnPath(t: number) {
