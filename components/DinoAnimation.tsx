@@ -57,23 +57,13 @@ export default function DinoAnimation() {
     function buildPath() {
       const navH = 60
       const mx = 45
-      const isMobile = W < 768
-      if (isMobile) {
-        // Mobile: horizontal loop along bottom 60px only
-        const y = H - 30
-        PATH = [
-          { x: mx, y },
-          { x: W - mx, y },
-          { x: mx, y },
-        ]
-      } else {
-        PATH = [
-          { x: mx, y: navH + 30 },
-          { x: mx, y: H - 30 },
-          { x: W - mx, y: H - 30 },
-          { x: W - mx, y: navH + 30 },
-        ]
-      }
+      // Full rectangle path on all screen sizes — dino runs around the whole page
+      PATH = [
+        { x: mx, y: navH + 30 },
+        { x: mx, y: H - 30 },
+        { x: W - mx, y: H - 30 },
+        { x: W - mx, y: navH + 30 },
+      ]
     }
 
     function getPosOnPath(t: number) {
@@ -92,14 +82,9 @@ export default function DinoAnimation() {
           const y = a.y + dy * f
           const angle = Math.atan2(dy, dx)
           // Inward = perpendicular to path, pointing toward content
-          // Mobile (bottom strip): always up. Desktop (rectangle): (dy, -dx) for clockwise
-          let inward: { x: number; y: number }
-          if (PATH.length === 3) {
-            inward = { x: 0, y: -1 }
-          } else {
-            const inLen = Math.hypot(dy, -dx) || 1
-            inward = { x: dy / inLen, y: -dx / inLen }
-          }
+          // (dy, -dx) for clockwise rectangle
+          const inLen = Math.hypot(dy, -dx) || 1
+          const inward = { x: dy / inLen, y: -dx / inLen }
           return { x, y, angle, seg: i, inward }
         }
         target -= seg
@@ -107,7 +92,7 @@ export default function DinoAnimation() {
       const a = PATH[0], b = PATH[1]
       const dx = b.x - a.x, dy = b.y - a.y
       const inLen = Math.hypot(dy, -dx) || 1
-      const inward = PATH.length === 3 ? { x: 0, y: -1 } : { x: dy / inLen, y: -dx / inLen }
+      const inward = { x: dy / inLen, y: -dx / inLen }
       return { x: PATH[0].x, y: PATH[0].y, angle: Math.atan2(dy, dx), seg: 0, inward }
     }
 

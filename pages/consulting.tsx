@@ -34,14 +34,14 @@ export default function Consulting() {
       <div className="container page">
         <div className="fade-up" style={{ marginBottom: '3.5rem' }}>
           <h1 style={{ marginBottom: '0.75rem' }}>Work With Me</h1>
-          <p style={{ color: 'var(--ink-light)', maxWidth: '520px', fontSize: '1.05rem', lineHeight: '1.8' }}>
+          <p style={{ color: 'var(--ink-secondary)', maxWidth: '520px', fontSize: '1.05rem', lineHeight: '1.8' }}>
             I advise early-stage teams on operations, hiring, and building high-functioning offshore teams. 
             If you're working on something interesting, I'd love to hear about it.
           </p>
           <div className="hero-divider" style={{ marginTop: '2rem' }} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
             {['Operations & Scaling', 'Offshore Team Building', 'Hiring Strategy', 'Exec Advising'].map(area => (
-              <div key={area} style={{ padding: '1.25rem', background: 'var(--warm-white)', border: '1px solid var(--border)', borderRadius: '4px' }}>
+              <div key={area} style={{ padding: '1.25rem', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '4px' }}>
                 <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--ink)', margin: 0 }}>{area}</p>
               </div>
             ))}

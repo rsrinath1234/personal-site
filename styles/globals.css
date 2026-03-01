@@ -46,7 +46,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
-  font-size: 16px;
+  font-size: clamp(15px, 2vw + 12px, 18px);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
@@ -65,7 +65,7 @@ body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Typography */
+/* Typography — unified scale */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Cormorant Garamond', serif;
   line-height: 1.15;
@@ -74,9 +74,9 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
 }
 
-h1 { font-size: clamp(2.5rem, 6vw, 4.25rem); }
-h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); }
-h3 { font-size: 1.3rem; }
+h1 { font-size: clamp(2rem, 5vw + 1.25rem, 4rem); }
+h2 { font-size: clamp(1.5rem, 2.5vw + 1rem, 2.25rem); }
+h3 { font-size: clamp(1.15rem, 1.5vw + 0.9rem, 1.35rem); }
 
 p { line-height: 1.75; color: var(--ink-secondary); }
 
@@ -110,17 +110,17 @@ nav {
 
 .nav-logo {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.2rem;
+  font-size: clamp(0.95rem, 2.2vw, 1.15rem);
   font-weight: 500;
   color: var(--ink);
   letter-spacing: 0.01em;
 }
 .nav-logo:hover { color: var(--accent); }
 
-.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links { display: flex; gap: clamp(1rem, 3vw, 2rem); list-style: none; }
 
 .nav-links a {
-  font-size: 0.75rem;
+  font-size: clamp(0.7rem, 2vw, 0.8rem);
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -135,9 +135,9 @@ nav {
   background: none;
   border: 1.5px solid var(--border);
   border-radius: 20px;
-  padding: 0.3rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: clamp(0.75rem, 1.8vw, 0.85rem);
   color: var(--ink-muted);
   display: flex;
   align-items: center;
@@ -147,7 +147,7 @@ nav {
   font-weight: 500;
 }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
-.theme-toggle .icon { font-size: 0.9rem; transition: transform 0.4s ease; }
+.theme-toggle .icon { font-size: 1em; transition: transform 0.4s ease; }
 [data-theme="dark"] .theme-toggle .icon { transform: rotate(180deg); }
 
 /* Page */
@@ -179,7 +179,7 @@ nav {
 .hero h1 em { font-style: italic; color: var(--ink-secondary); }
 
 .hero-bio {
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 1.5vw + 0.5rem, 1.15rem);
   color: var(--ink-secondary);
   max-width: 520px;
   line-height: 1.8;
@@ -191,7 +191,7 @@ nav {
 
 /* Section label */
 .section-label {
-  font-size: 0.68rem;
+  font-size: clamp(0.65rem, 1.5vw, 0.72rem);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -241,14 +241,14 @@ nav {
 }
 
 .card h3 {
-  font-size: 1.2rem;
+  font-size: clamp(1.1rem, 1.5vw + 0.7rem, 1.25rem);
   margin-bottom: 0.6rem;
   color: var(--ink);
   font-family: 'Cormorant Garamond', serif;
 }
 
 .card p {
-  font-size: 0.875rem;
+  font-size: clamp(0.85rem, 1.2vw + 0.5rem, 0.9rem);
   color: var(--ink-muted);
   line-height: 1.65;
   margin-bottom: 1.1rem;
@@ -296,9 +296,9 @@ nav {
 .back-link:hover { color: var(--ink); }
 
 /* Prose */
-.prose { font-size: 1.05rem; line-height: 1.85; color: var(--ink-secondary); }
-.prose h2 { font-size: 1.6rem; color: var(--ink); margin: 3rem 0 1rem; }
-.prose h3 { color: var(--ink); margin: 2rem 0 0.75rem; }
+.prose { font-size: clamp(1rem, 1.2vw + 0.6rem, 1.1rem); line-height: 1.85; color: var(--ink-secondary); }
+.prose h2 { font-size: clamp(1.4rem, 2vw + 0.8rem, 1.65rem); color: var(--ink); margin: 3rem 0 1rem; }
+.prose h3 { font-size: clamp(1.15rem, 1.2vw + 0.7rem, 1.25rem); color: var(--ink); margin: 2rem 0 0.75rem; }
 .prose p { margin-bottom: 1.625rem; }
 .prose ul, .prose ol { padding-left: 1.5rem; margin-bottom: 1.625rem; }
 .prose li { margin-bottom: 0.5rem; }
@@ -509,7 +509,7 @@ footer {
 @media (max-width: 640px) {
   .nav-inner { padding: 0 1rem; }
   .nav-links { gap: 0.75rem; flex-wrap: wrap; justify-content: flex-end; }
-  .nav-links a { font-size: 0.65rem; }
+  .nav-links a { font-size: clamp(0.7rem, 3vw, 0.8rem); }
   .theme-toggle .label { display: none; }
   .theme-toggle { padding: 0.35rem 0.5rem; }
   .card-grid, .project-grid { grid-template-columns: 1fr; }
