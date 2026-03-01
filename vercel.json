@@ -1,5 +1,0 @@
-{
-  "redirects": [
-    { "source": "/:path*", "destination": "https://www.raghavsrinath.com/:path*", "has": [{ "type": "host", "value": "raghavsrinath.com" }], "permanent": true }
-  ]
-}
