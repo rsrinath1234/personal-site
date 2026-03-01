@@ -40,8 +40,8 @@ export default function DinoAnimation() {
       h: 11 + Math.random() * 9,
     }))
 
-    const dino1 = { t: 0, speed: 0.000135, jumpV: 0, jumpY: 0, isJumping: false, legPhase: 0, roaring: false, lookBack: 0 }
-    const dino2 = { t: -GAP, speed: 0.000142, jumpV: 0, jumpY: 0, isJumping: false, legPhase: Math.PI, roaring: false, lookBack: 0 }
+    const dino1 = { t: 0, speed: 0.000135, jumpVel: 0, jumpDist: 0, jumpDir: { x: 0, y: -1 }, isJumping: false, legPhase: 0, roaring: false, lookBack: 0 }
+    const dino2 = { t: -GAP, speed: 0.000142, jumpVel: 0, jumpDist: 0, jumpDir: { x: 0, y: -1 }, isJumping: false, legPhase: Math.PI, roaring: false, lookBack: 0 }
 
     let lastSeg1 = 0, lastSeg2 = 0
     let footprintTimer1 = 0, footprintTimer2 = 0
@@ -84,20 +84,39 @@ export default function DinoAnimation() {
       let target = (((t % 1) + 1) % 1) * total
       for (let i = 0; i < PATH.length; i++) {
         const a = PATH[i], b = PATH[(i + 1) % PATH.length]
-        const seg = Math.hypot(b.x - a.x, b.y - a.y)
+        const dx = b.x - a.x, dy = b.y - a.y
+        const seg = Math.hypot(dx, dy)
         if (target <= seg) {
           const f = target / seg
-          return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, angle: Math.atan2(b.y - a.y, b.x - a.x), seg: i }
+          const x = a.x + dx * f
+          const y = a.y + dy * f
+          const angle = Math.atan2(dy, dx)
+          // Inward = perpendicular to path, pointing toward content
+          // Mobile (bottom strip): always up. Desktop (rectangle): (dy, -dx) for clockwise
+          let inward: { x: number; y: number }
+          if (PATH.length === 3) {
+            inward = { x: 0, y: -1 }
+          } else {
+            const inLen = Math.hypot(dy, -dx) || 1
+            inward = { x: dy / inLen, y: -dx / inLen }
+          }
+          return { x, y, angle, seg: i, inward }
         }
         target -= seg
       }
-      return { x: PATH[0].x, y: PATH[0].y, angle: 0, seg: 0 }
+      const a = PATH[0], b = PATH[1]
+      const dx = b.x - a.x, dy = b.y - a.y
+      const inLen = Math.hypot(dy, -dx) || 1
+      const inward = PATH.length === 3 ? { x: 0, y: -1 } : { x: dy / inLen, y: -dx / inLen }
+      return { x: PATH[0].x, y: PATH[0].y, angle: Math.atan2(dy, dx), seg: 0, inward }
     }
 
-    function tryJump(dino: typeof dino1) {
+    function tryJump(dino: typeof dino1, pos: { inward: { x: number; y: number } }) {
       if (!dino.isJumping) {
         dino.isJumping = true
-        dino.jumpV = -8.5
+        dino.jumpDir = pos.inward
+        dino.jumpVel = -8.5
+        dino.jumpDist = 0
       }
     }
 
@@ -105,7 +124,10 @@ export default function DinoAnimation() {
       const LOOK = 0.022
       for (const obs of obstacles) {
         const diff = ((obs.t - dino.t) % 1 + 1) % 1
-        if (diff < LOOK && diff > 0.001) tryJump(dino)
+        if (diff < LOOK && diff > 0.001) {
+          const pos = getPosOnPath(dino.t)
+          tryJump(dino, pos)
+        }
       }
     }
 
@@ -162,14 +184,14 @@ export default function DinoAnimation() {
     }
 
     function drawDino(
-      x: number, y: number, jumpY: number, angle: number, legPhase: number,
+      x: number, y: number, jumpOffsetX: number, jumpOffsetY: number, angle: number, legPhase: number,
       col: string, glowCol: string, lookBack: number, roaring: boolean
     ) {
       const S = 22
       const s = S / 20
 
       ctxEl.save()
-      ctxEl.translate(x, y + jumpY)
+      ctxEl.translate(x + jumpOffsetX, y + jumpOffsetY)
 
       if (isDark) {
         ctxEl.shadowBlur = 18
@@ -318,11 +340,11 @@ export default function DinoAnimation() {
 
       ;[dino1, dino2].forEach((d) => {
         if (d.isJumping) {
-          d.jumpV += 0.65
-          d.jumpY += d.jumpV
-          if (d.jumpY >= 0) {
-            d.jumpY = 0
-            d.jumpV = 0
+          d.jumpVel += 0.65
+          d.jumpDist += d.jumpVel
+          if (d.jumpDist >= 0) {
+            d.jumpDist = 0
+            d.jumpVel = 0
             d.isJumping = false
           }
         }
@@ -368,8 +390,8 @@ export default function DinoAnimation() {
       const glow1 = isDark ? 'rgba(120,190,255,0.7)' : 'rgba(66,120,184,0.3)'
       const glow2 = isDark ? 'rgba(100,160,255,0.5)' : 'rgba(66,120,184,0.2)'
 
-      drawDino(pos2.x, pos2.y, dino2.jumpY, pos2.angle, dino2.legPhase, d2col, glow2, dino2.lookBack, dino2.roaring)
-      drawDino(pos1.x, pos1.y, dino1.jumpY, pos1.angle, dino1.legPhase, d1col, glow1, dino1.lookBack, dino1.roaring)
+      drawDino(pos2.x, pos2.y, dino2.jumpDir.x * dino2.jumpDist, dino2.jumpDir.y * dino2.jumpDist, pos2.angle, dino2.legPhase, d2col, glow2, dino2.lookBack, dino2.roaring)
+      drawDino(pos1.x, pos1.y, dino1.jumpDir.x * dino1.jumpDist, dino1.jumpDir.y * dino1.jumpDist, pos1.angle, dino1.legPhase, d1col, glow1, dino1.lookBack, dino1.roaring)
 
       rafId = requestAnimationFrame(loop)
     }
