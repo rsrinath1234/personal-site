@@ -58,7 +58,7 @@ export default function Consulting() {
           <div>
             <p className="section-label">Send an Inquiry</p>
             <form onSubmit={handleSubmit} style={{ maxWidth: '560px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="name">Name</label>
                   <input id="name" name="name" type="text" required placeholder="Your name" />
