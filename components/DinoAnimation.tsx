@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-const ROARS = ['RAAWR!! 🦕', 'STOMP! 🦖', 'ZOOM! 💨', 'YIKES! 😱', 'NEVER! 🏃', "CAN'T CATCH ME!", 'WHEEE!! 🌀']
+const BLURB_SOUNDS = ['Bloop!', 'Whee!', 'Boing!', 'Woop!', 'Bounce!', 'Hehe!', 'Whee!', '~']
 const OBS_POSITIONS = [0.07, 0.16, 0.29, 0.41, 0.53, 0.64, 0.77, 0.9]
 const GAP = 0.16
 
@@ -40,11 +40,12 @@ export default function DinoAnimation() {
       h: 11 + Math.random() * 9,
     }))
 
-    const dino1 = { t: 0, speed: 0.000135, jumpVel: 0, jumpDist: 0, jumpDir: { x: 0, y: -1 }, isJumping: false, legPhase: 0, roaring: false, lookBack: 0 }
-    const dino2 = { t: -GAP, speed: 0.000142, jumpVel: 0, jumpDist: 0, jumpDir: { x: 0, y: -1 }, isJumping: false, legPhase: Math.PI, roaring: false, lookBack: 0 }
+    const blob1 = { t: 0, speed: 0.000045, jumpVel: 0, jumpDist: 0, jumpDir: { x: 0, y: -1 }, isJumping: false, legPhase: 0, excited: false, lookBack: 0 }
+    const blob2 = { t: -GAP, speed: 0.000048, jumpVel: 0, jumpDist: 0, jumpDir: { x: 0, y: -1 }, isJumping: false, legPhase: Math.PI, excited: false, lookBack: 0 }
 
     let lastSeg1 = 0, lastSeg2 = 0
     let footprintTimer1 = 0, footprintTimer2 = 0
+    let collisionCooldown = 0
     const footprints: { x: number; y: number; angle: number; life: number }[] = []
     const dust: { x: number; y: number; vx: number; vy: number; life: number; r: number }[] = []
 
@@ -57,7 +58,7 @@ export default function DinoAnimation() {
     function buildPath() {
       const navH = 60
       const mx = 45
-      // Full rectangle path on all screen sizes — dino runs around the whole page
+      // Full rectangle path on all screen sizes — blobs run around the whole page
       PATH = [
         { x: mx, y: navH + 30 },
         { x: mx, y: H - 30 },
@@ -96,22 +97,33 @@ export default function DinoAnimation() {
       return { x: PATH[0].x, y: PATH[0].y, angle: Math.atan2(dy, dx), seg: 0, inward }
     }
 
-    function tryJump(dino: typeof dino1, pos: { inward: { x: number; y: number } }) {
-      if (!dino.isJumping) {
-        dino.isJumping = true
-        dino.jumpDir = pos.inward
-        dino.jumpVel = -8.5
-        dino.jumpDist = 0
+    const lastObstacleJumped1 = { idx: -1 }
+    const lastObstacleJumped2 = { idx: -1 }
+
+    function tryJump(blob: typeof blob1, pos: { inward: { x: number; y: number } }, obsIdx: number, lastJumped: { idx: number }) {
+      if (!blob.isJumping && lastJumped.idx !== obsIdx) {
+        blob.isJumping = true
+        lastJumped.idx = obsIdx
+        // Jump inward (over the obstacle toward content) to clear the block
+        blob.jumpDir = { x: pos.inward.x, y: pos.inward.y }
+        blob.jumpVel = -9.5
+        blob.jumpDist = 0
       }
     }
 
-    function checkJumps(dino: typeof dino1) {
-      const LOOK = 0.022
-      for (const obs of obstacles) {
-        const diff = ((obs.t - dino.t) % 1 + 1) % 1
-        if (diff < LOOK && diff > 0.001) {
-          const pos = getPosOnPath(dino.t)
-          tryJump(dino, pos)
+    function checkJumps(blob: typeof blob1, lastJumped: { idx: number }) {
+      const LOOK = 0.005 // Jump when very close to obstacle (was 0.022 = too early)
+      const PASSED = 0.04 // Consider obstacle "passed" after this distance
+      for (let i = 0; i < obstacles.length; i++) {
+        const obs = obstacles[i]
+        const diff = ((obs.t - blob.t) % 1 + 1) % 1
+        // Reset cooldown for this obstacle once we've passed it
+        if (lastJumped.idx === i && (diff > PASSED || diff < 0.001)) {
+          lastJumped.idx = -1
+        }
+        if (diff < LOOK && diff > 0.0005) {
+          const pos = getPosOnPath(blob.t)
+          tryJump(blob, pos, i, lastJumped)
         }
       }
     }
@@ -132,21 +144,18 @@ export default function DinoAnimation() {
         ctxEl.save()
         ctxEl.translate(fp.x, fp.y)
         ctxEl.rotate(fp.angle + Math.PI / 2)
-        const alpha = fp.life * (isDark ? 0.5 : 0.35)
-        ctxEl.fillStyle = isDark ? `rgba(100,170,255,${alpha})` : `rgba(66,120,184,${alpha})`
+        const alpha = fp.life * (isDark ? 0.4 : 0.3)
+        ctxEl.fillStyle = isDark ? `rgba(180,200,255,${alpha})` : `rgba(255,220,210,${alpha})`
         ctxEl.beginPath()
-        ctxEl.ellipse(-3, 0, 2, 3, 0, 0, Math.PI * 2)
-        ctxEl.fill()
-        ctxEl.beginPath()
-        ctxEl.ellipse(3, 0, 2, 3, 0, 0, Math.PI * 2)
+        ctxEl.ellipse(0, 0, 3, 4, 0, 0, Math.PI * 2)
         ctxEl.fill()
         ctxEl.restore()
       }
     }
 
     function spawnDust(x: number, y: number) {
-      for (let i = 0; i < 6; i++) {
-        dust.push({ x, y, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, life: 1, r: 2 + Math.random() * 3 })
+      for (let i = 0; i < 5; i++) {
+        dust.push({ x, y, vx: (Math.random() - 0.5) * 2.5, vy: (Math.random() - 0.5) * 2.5, life: 1, r: 1.5 + Math.random() * 2 })
       }
     }
 
@@ -163,86 +172,54 @@ export default function DinoAnimation() {
       for (const p of dust) {
         ctxEl.beginPath()
         ctxEl.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctxEl.fillStyle = isDark ? `rgba(100,170,255,${p.life * 0.4})` : `rgba(190,200,216,${p.life * 0.6})`
+        ctxEl.fillStyle = isDark ? `rgba(180,200,255,${p.life * 0.35})` : `rgba(255,220,210,${p.life * 0.5})`
         ctxEl.fill()
       }
     }
 
-    function drawDino(
-      x: number, y: number, jumpOffsetX: number, jumpOffsetY: number, angle: number, legPhase: number,
-      col: string, glowCol: string, lookBack: number, roaring: boolean
+    function drawBlob(
+      x: number, y: number, jumpOffsetX: number, jumpOffsetY: number, angle: number,
+      col: string, glowCol: string, lookBack: number, excited: boolean
     ) {
       const S = 22
       const s = S / 20
+      const jumpMag = Math.hypot(jumpOffsetX, jumpOffsetY)
+      const squash = excited ? 1.12 : 0.96 + Math.min(jumpMag * 0.015, 0.12)
 
       ctxEl.save()
       ctxEl.translate(x + jumpOffsetX, y + jumpOffsetY)
+      ctxEl.rotate(angle + Math.PI / 2)
 
       if (isDark) {
-        ctxEl.shadowBlur = 18
+        ctxEl.shadowBlur = 22
         ctxEl.shadowColor = glowCol
       }
 
-      const scaleX = lookBack > 0 ? -1 : 1
-      ctxEl.rotate(angle + Math.PI / 2)
-      ctxEl.scale(scaleX, 1)
-
+      // Main blob body — soft ellipse, Studio Ghibli style
       ctxEl.fillStyle = col
-      ctxEl.strokeStyle = isDark ? 'rgba(100,170,255,0.4)' : 'rgba(66,120,184,0.35)'
-      ctxEl.lineWidth = 0.8
-
+      ctxEl.strokeStyle = isDark ? 'rgba(180,200,255,0.2)' : 'rgba(255,255,255,0.5)'
+      ctxEl.lineWidth = 1
       ctxEl.beginPath()
-      roundRect(ctxEl, -7 * s, -10 * s, 14 * s, 12 * s, 3 * s)
+      ctxEl.ellipse(0, 0, 12 * s, 14 * s * squash, 0, 0, Math.PI * 2)
       ctxEl.fill()
       ctxEl.stroke()
 
+      // Eyes — simple, expressive
+      ctxEl.fillStyle = isDark ? '#2a3545' : '#3d3a36'
+      const eyeY = -4 * s
+      const eyeSpacing = 5 * s
+      const eyeScale = excited ? 1.2 : 1
       ctxEl.beginPath()
-      roundRect(ctxEl, 2 * s, -18 * s, 10 * s, 10 * s, 2 * s)
-      ctxEl.fill()
-      ctxEl.stroke()
-
-      ctxEl.fillStyle = isDark ? '#6aa0e0' : '#4278b8'
-      ctxEl.beginPath()
-      const eyeR = roaring ? 2.8 * s : 1.8 * s
-      ctxEl.arc(9 * s, -14 * s, eyeR, 0, Math.PI * 2)
-      ctxEl.fill()
-
-      if (roaring) {
-        ctxEl.strokeStyle = isDark ? '#6aa0e0' : '#4278b8'
-        ctxEl.lineWidth = 1.5
-        ctxEl.beginPath()
-        ctxEl.arc(11 * s, -10 * s, 3 * s, 0, Math.PI)
-        ctxEl.stroke()
-      }
-
-      ctxEl.fillStyle = col
-      ctxEl.strokeStyle = isDark ? 'rgba(100,170,255,0.35)' : 'rgba(66,120,184,0.35)'
-      ctxEl.lineWidth = 0.8
-      ctxEl.beginPath()
-      roundRect(ctxEl, 10 * s, -12 * s, 5 * s, 4 * s, 1 * s)
-      ctxEl.fill()
-      ctxEl.stroke()
-
-      ctxEl.beginPath()
-      roundRect(ctxEl, 5 * s, -4 * s, 5 * s, 3 * s, 1 * s)
+      ctxEl.ellipse(-eyeSpacing, eyeY, 2.5 * s * eyeScale, 3 * s * eyeScale, 0, 0, Math.PI * 2)
+      ctxEl.ellipse(eyeSpacing, eyeY, 2.5 * s * eyeScale, 3 * s * eyeScale, 0, 0, Math.PI * 2)
       ctxEl.fill()
 
-      const legOff = Math.sin(legPhase) * 4 * s
+      // Blush — Ghibli touch
+      ctxEl.fillStyle = isDark ? 'rgba(255,180,200,0.35)' : 'rgba(255,200,220,0.45)'
       ctxEl.beginPath()
-      roundRect(ctxEl, -5 * s, 2 * s, 4 * s, 8 * s + legOff, 1.5 * s)
+      ctxEl.ellipse(-10 * s, 4 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2)
+      ctxEl.ellipse(10 * s, 4 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2)
       ctxEl.fill()
-      ctxEl.stroke()
-      ctxEl.beginPath()
-      roundRect(ctxEl, 1 * s, 2 * s, 4 * s, 8 * s - legOff, 1.5 * s)
-      ctxEl.fill()
-      ctxEl.stroke()
-
-      ctxEl.beginPath()
-      ctxEl.moveTo(-7 * s, -6 * s)
-      ctxEl.quadraticCurveTo(-18 * s, -2 * s, -14 * s, 6 * s)
-      ctxEl.lineWidth = 3 * s
-      ctxEl.strokeStyle = col
-      ctxEl.stroke()
 
       ctxEl.restore()
     }
@@ -252,19 +229,19 @@ export default function DinoAnimation() {
       ctxEl.save()
       ctxEl.translate(pos.x, pos.y)
       ctxEl.rotate(pos.angle + Math.PI / 2)
-      ctxEl.fillStyle = isDark ? 'rgba(100,160,255,0.35)' : 'rgba(66,120,184,0.45)'
-      ctxEl.strokeStyle = isDark ? 'rgba(100,160,255,0.7)' : 'rgba(66,120,184,0.7)'
+      ctxEl.fillStyle = isDark ? 'rgba(140,180,255,0.3)' : 'rgba(200,220,240,0.5)'
+      ctxEl.strokeStyle = isDark ? 'rgba(160,200,255,0.5)' : 'rgba(180,200,220,0.6)'
       ctxEl.lineWidth = 1
       if (isDark) {
-        ctxEl.shadowBlur = 8
-        ctxEl.shadowColor = 'rgba(100,160,255,0.4)'
+        ctxEl.shadowBlur = 6
+        ctxEl.shadowColor = 'rgba(140,180,255,0.3)'
       }
       ctxEl.beginPath()
-      roundRect(ctxEl, -obs.w / 2, -obs.h, obs.w, obs.h, 2)
+      roundRect(ctxEl, -obs.w / 2, -obs.h, obs.w, obs.h, 3)
       ctxEl.fill()
       ctxEl.stroke()
       ctxEl.shadowBlur = 0
-      ctxEl.fillStyle = isDark ? 'rgba(180,220,255,0.25)' : 'rgba(255,255,255,0.4)'
+      ctxEl.fillStyle = isDark ? 'rgba(200,220,255,0.2)' : 'rgba(255,255,255,0.5)'
       ctxEl.beginPath()
       roundRect(ctxEl, -obs.w / 4, -obs.h * 0.75, obs.w * 0.3, obs.h * 0.25, 1)
       ctxEl.fill()
@@ -274,20 +251,20 @@ export default function DinoAnimation() {
     function handleCanvasClick(e: MouseEvent) {
       const mx = e.clientX
       const my = e.clientY
-      const pos1 = getPosOnPath(dino1.t)
-      const pos2 = getPosOnPath(dino2.t)
+      const pos1 = getPosOnPath(blob1.t)
+      const pos2 = getPosOnPath(blob2.t)
       const hit1 = Math.hypot(mx - pos1.x, my - pos1.y) < 28
       const hit2 = Math.hypot(mx - pos2.x, my - pos2.y) < 28
 
       if (hit1 || hit2) {
         const pos = hit1 ? pos1 : pos2
-        const dino = hit1 ? dino1 : dino2
+        const blob = hit1 ? blob1 : blob2
 
-        dino.roaring = true
-        dino.lookBack = 1
+        blob.excited = true
+        blob.lookBack = 1
 
-        const roar = ROARS[Math.floor(Math.random() * ROARS.length)]
-        roarBubbleEl.textContent = roar
+        const sound = BLURB_SOUNDS[Math.floor(Math.random() * BLURB_SOUNDS.length)]
+        roarBubbleEl.textContent = sound
         roarBubbleEl.style.left = pos.x - 60 + 'px'
         roarBubbleEl.style.top = pos.y - 60 + 'px'
         roarBubbleEl.classList.add('show')
@@ -295,9 +272,9 @@ export default function DinoAnimation() {
         if (roarTimeout) clearTimeout(roarTimeout)
         roarTimeout = setTimeout(() => {
           roarBubbleEl.classList.remove('show')
-          dino.roaring = false
+          blob.excited = false
           setTimeout(() => {
-            dino.lookBack = 0
+            blob.lookBack = 0
           }, 400)
         }, 1400)
       } else {
@@ -318,28 +295,61 @@ export default function DinoAnimation() {
       lastTime = ts
       const speedMult = 1 + scrollSpeed * 0.012
 
-      dino1.t += dino1.speed * dt * speedMult
-      dino2.t += dino2.speed * dt * speedMult
-      dino1.legPhase += 0.14 * speedMult
-      dino2.legPhase += 0.14 * speedMult
+      blob1.t += blob1.speed * dt * speedMult
+      blob2.t += blob2.speed * dt * speedMult
+      blob1.legPhase += 0.14 * speedMult
+      blob2.legPhase += 0.14 * speedMult
 
-      ;[dino1, dino2].forEach((d) => {
-        if (d.isJumping) {
-          d.jumpVel += 0.65
-          d.jumpDist += d.jumpVel
-          if (d.jumpDist >= 0) {
-            d.jumpDist = 0
-            d.jumpVel = 0
-            d.isJumping = false
+      ;[blob1, blob2].forEach((b) => {
+        if (b.isJumping) {
+          b.jumpVel += 0.65
+          b.jumpDist += b.jumpVel
+          if (b.jumpDist >= 0) {
+            b.jumpDist = 0
+            b.jumpVel = 0
+            b.isJumping = false
           }
         }
       })
 
-      checkJumps(dino1)
-      checkJumps(dino2)
+      checkJumps(blob1, lastObstacleJumped1)
+      checkJumps(blob2, lastObstacleJumped2)
 
-      const pos1 = getPosOnPath(dino1.t)
-      const pos2 = getPosOnPath(dino2.t)
+      const pos1 = getPosOnPath(blob1.t)
+      const pos2 = getPosOnPath(blob2.t)
+
+      // Blob collision — when they run into each other, bounce apart
+      collisionCooldown = Math.max(0, collisionCooldown - dt)
+      const dist = Math.hypot(pos1.x - pos2.x, pos1.y - pos2.y)
+      const COLLISION_DIST = 48
+      if (dist < COLLISION_DIST && dist > 1 && collisionCooldown <= 0) {
+        collisionCooldown = 400
+        const invDist = 1 / dist
+        const dx1 = (pos1.x - pos2.x) * invDist
+        const dy1 = (pos1.y - pos2.y) * invDist
+        const dx2 = -dx1
+        const dy2 = -dy1
+        if (!blob1.isJumping) {
+          blob1.isJumping = true
+          blob1.jumpDir = { x: dx1, y: dy1 }
+          blob1.jumpVel = -7
+          blob1.jumpDist = 0
+        }
+        if (!blob2.isJumping) {
+          blob2.isJumping = true
+          blob2.jumpDir = { x: dx2, y: dy2 }
+          blob2.jumpVel = -7
+          blob2.jumpDist = 0
+        }
+        blob1.excited = true
+        blob2.excited = true
+        spawnDust(pos1.x, pos1.y)
+        spawnDust(pos2.x, pos2.y)
+        setTimeout(() => {
+          blob1.excited = false
+          blob2.excited = false
+        }, 600)
+      }
 
       if (pos1.seg !== lastSeg1) {
         spawnDust(pos1.x, pos1.y)
@@ -370,13 +380,13 @@ export default function DinoAnimation() {
       for (const obs of obstacles) drawObstacle(obs)
       drawDust()
 
-      const d1col = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.95)'
-      const d2col = isDark ? 'rgba(160,200,255,0.75)' : 'rgba(255,255,255,0.72)'
-      const glow1 = isDark ? 'rgba(120,190,255,0.7)' : 'rgba(66,120,184,0.3)'
-      const glow2 = isDark ? 'rgba(100,160,255,0.5)' : 'rgba(66,120,184,0.2)'
+      const col1 = isDark ? 'rgba(255,250,245,0.95)' : 'rgba(255,248,240,0.98)'
+      const col2 = isDark ? 'rgba(220,235,255,0.85)' : 'rgba(255,235,220,0.9)'
+      const glow1 = isDark ? 'rgba(180,200,255,0.4)' : 'rgba(255,220,200,0.35)'
+      const glow2 = isDark ? 'rgba(160,180,255,0.3)' : 'rgba(255,210,190,0.25)'
 
-      drawDino(pos2.x, pos2.y, dino2.jumpDir.x * dino2.jumpDist, dino2.jumpDir.y * dino2.jumpDist, pos2.angle, dino2.legPhase, d2col, glow2, dino2.lookBack, dino2.roaring)
-      drawDino(pos1.x, pos1.y, dino1.jumpDir.x * dino1.jumpDist, dino1.jumpDir.y * dino1.jumpDist, pos1.angle, dino1.legPhase, d1col, glow1, dino1.lookBack, dino1.roaring)
+      drawBlob(pos2.x, pos2.y, blob2.jumpDir.x * blob2.jumpDist, blob2.jumpDir.y * blob2.jumpDist, pos2.angle, col2, glow2, blob2.lookBack, blob2.excited)
+      drawBlob(pos1.x, pos1.y, blob1.jumpDir.x * blob1.jumpDist, blob1.jumpDir.y * blob1.jumpDist, pos1.angle, col1, glow1, blob1.lookBack, blob1.excited)
 
       rafId = requestAnimationFrame(loop)
     }
@@ -404,9 +414,9 @@ export default function DinoAnimation() {
     <>
       <canvas ref={canvasRef} id="dinoCanvas" className="dino-canvas" aria-hidden />
       <div ref={roarBubbleRef} className="dino-roar-bubble" id="roarBubble">
-        RAAWR!! 🦕
+        Bloop!
       </div>
-      <div className="dino-hint">Click a dino · Scroll to speed up</div>
+      <div className="dino-hint">Click a blob · Scroll to speed up</div>
     </>
   )
 }
