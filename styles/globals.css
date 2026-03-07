@@ -125,10 +125,84 @@ nav {
 
 .nav-links { display: flex; gap: clamp(1rem, 3vw, 2rem); list-style: none; align-items: center; }
 
-/* Mobile: hide nav links, show only logo + theme toggle */
-@media (max-width: 767px) {
-  .nav-links > li:not(:last-child) { display: none; }
+.nav-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+/* Hamburger — same formatting as theme toggle */
+.nav-menu-toggle {
+  display: none;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  color: var(--ink-muted);
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-family: 'Urbanist', sans-serif;
 }
+.nav-menu-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+.nav-menu-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 18px;
+}
+.nav-menu-icon span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+/* Mobile: hamburger + dropdown */
+@media (max-width: 767px) {
+  .nav-link-item { display: none; }
+  .nav-menu-toggle { display: flex; padding: 0.35rem 0.5rem; }
+}
+
+/* Desktop: hide hamburger */
+@media (min-width: 768px) {
+  .nav-menu-toggle { display: none; }
+}
+
+/* Dropdown */
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--nav-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 1.25rem 1rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 99;
+}
+@media (min-width: 768px) {
+  .nav-dropdown { display: none !important; }
+}
+@media (max-width: 767px) {
+  .nav-dropdown { display: flex; max-height: 0; overflow: hidden; padding-top: 0; padding-bottom: 0; opacity: 0; transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.2s ease; }
+  .nav-dropdown--open { max-height: 200px; opacity: 1; padding: 0.5rem 1.25rem 1rem; }
+}
+.nav-dropdown-link {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  border-radius: var(--radius);
+  transition: color 0.15s, background 0.15s;
+}
+.nav-dropdown-link:hover { color: var(--ink); background: var(--accent-bg); }
 
 .nav-links a {
   font-size: clamp(0.7rem, 2vw, 0.8rem);
